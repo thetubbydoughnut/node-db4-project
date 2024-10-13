@@ -8,6 +8,7 @@ async function getRecipeById(recipe_id) {
         .select(
             'r.recipe_id',
             'r.recipe_name',
+            'r.created_at',
             's.step_id',
             's.step_number',
             's.step_text',
@@ -18,42 +19,39 @@ async function getRecipeById(recipe_id) {
         .orderBy('s.step_number')
         .where('r.recipe_id', recipe_id)
 
-        const recipes = {
-            recipe_id: recipeRows[0].recipe_id,
-            recipe_name: recipeRows[0].recipe_name,
-            steps: recipeRows.reduce((acc, row) => {
-                if (!row.ingredient_id) {
-                    return acc.concat({
-                        step_id: row.step_id,
-                        step_number: row.step_number,
-                        step_text: row.step_text,
-                    })
+    const recipe = {
+        recipe_id: recipeRows[0].recipe_id,
+        recipe_name: recipeRows[0].recipe_name,
+        created_at: recipeRows[0].created_at,
+        steps: recipeRows.reduce((acc, row) => {
+            const existingStep = acc.find(step => step.step_id === row.step_id);
+            if (!existingStep) {
+                const newStep = {
+                    step_id: row.step_id,
+                    step_number: row.step_number,
+                    step_instructions: row.step_text,
+                    ingredients: []
+                };
+                if (row.ingredient_id) {
+                    newStep.ingredients.push({
+                        ingredient_id: row.ingredient_id,
+                        ingredient_name: row.ingredient_name,
+                        quantity: row.quantity
+                    });
                 }
-                if (row.ingredient_id && !acc.find(step => step.step_id === row.step_id)) {
-                    return acc.concat({
-                        step_id: row.step_id,
-                        step_number: row.step_number,
-                        step_text: row.step_text,
-                        ingredients: [
-                            {
-                                ingredient_id: row.ingredient_id,
-                                ingredient_name: row.ingredient_name,
-                                quantity: row.quantity,
-                            }
-                        ]
-                    })
-                }
-                const currentStep = acc.find(step => step.step_id === row.step_id)
-                currentStep.ingredients.push({
+                acc.push(newStep);
+            } else if (row.ingredient_id) {
+                existingStep.ingredients.push({
                     ingredient_id: row.ingredient_id,
                     ingredient_name: row.ingredient_name,
-                    quantity: row.quantity,
-                })
-                return acc
-            }, [])
-        }
+                    quantity: row.quantity
+                });
+            }
+            return acc;
+        }, [])
+    };
 
-    return recipeRows
+    return recipe;
 }
 
 module.exports = { getRecipeById }
