@@ -1,8 +1,16 @@
 const router = require('express').Router()
+const Recipe = require('./recipes-model')
 
-router.use('*', (req, res) => {
-    res.json({api: 'up'})
+
+router.get('/:reciper_id', (req, res, next) => {
+    Recipe.getRecipeById(req.params.reciper_id)
+    .then(resource => {
+        res.status(200).json(resource)
+    })
+    .catch(next)
 })
+
+
 
 router.use((err, req, res, next) => { 
     res.status(500).json({
