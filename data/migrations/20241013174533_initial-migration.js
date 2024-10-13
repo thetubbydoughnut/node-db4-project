@@ -25,7 +25,7 @@ exports.up = async function(knex) {
         .onDelete('RESTRICT')
         .onUpdate('RESTRICT')
   })
-  .createTable('step_ingredientsa', table => {
+  .createTable('step_ingredients', table => {
     table.increments()
   })
 };
